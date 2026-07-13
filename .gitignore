@@ -1,0 +1,97 @@
+# ==========================================
+# JAY COLLECTION'S FOR WEDDING - .GITIGNORE
+# ==========================================
+
+# --- Environment Variables & Secrets ---
+# Mengamankan kredensial DB, JWT Secrets, Midtrans Server Key, 
+# Cloudinary API Secret, dan Google reCAPTCHA Secret Key agar tidak bocor ke publik.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
+!.env.example
+
+# --- Node.js / Express / Next.js (Frontend & Backend) ---
+# Mengabaikan folder dependensi pnpm/npm dan hasil build Next.js / Express
+node_modules/
+/src/node_modules/
+.pnpm-store/
+jspm_packages/
+.next/
+out/
+build/
+dist/
+.npm
+/lib-cov
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+eslintcache
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+package.json
+!.gitignore
+
+# --- Python / FastAPI (AI Microservice) ---
+# Mengabaikan cache compiled Python dan virtual environment untuk FastAPI service
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
+ENV/
+.env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.spyderproject
+.spyproject
+.ropeproject
+/site-packages/
+.pytest_cache/
+
+# --- Database & Cache Local ---
+# Mengabaikan database storage local atau logs data, kecuali folder migrations resmi
+*.sql.gz
+*.backup
+pgdata/
+redisdata/
+.redis/
+*.log
+run.log
+logs/
+run_all_migrations.sql
+
+# --- Docker & Containerization ---
+.docker/
+docker-compose.override.yml
+*.tar
+*.tar.gz
+
+# --- OS & IDE (System & Editor Files) ---
+# Mengabaikan file bawaan Windows, macOS, dan pengaturan workspace personal
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Tools Tambahan ---
+# Mengabaikan temporary files dari Ngrok, Postman dumps, dll
+.ngrok/
+ngrok.exe
+testing postman.txt
+postman_collection.json
