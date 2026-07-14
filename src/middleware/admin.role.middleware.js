@@ -35,16 +35,17 @@ export const requirePermission = (permission) => {
       }
 
       const { role_name, permissions } = roleQuery.rows[0];
+      const roleSlug = (roleQuery.rows[0].role_slug || '').toLowerCase();
 
-      // Super Admin selalu diizinkan
-      if (role_name === 'Super Admin') {
+      if (roleSlug === 'super_admin' || role_name === 'Super Admin') {
         req.admin.role_name = role_name;
+        req.admin.role_slug = roleSlug;
         return next();
       }
 
-      // Cek permission spesifik
       if (permissions && permissions[permission] === true) {
         req.admin.role_name = role_name;
+        req.admin.role_slug = roleSlug;
         return next();
       }
 
@@ -73,7 +74,7 @@ export const requireRole = (...allowedRoles) => {
       }
 
       const roleQuery = await pool.query(
-        `SELECT r.role_slug 
+        `SELECT r.role_slug, r.role_name 
          FROM admins a 
          JOIN admin_roles r ON a.role_id = r.id 
          WHERE a.id = $1 AND a.is_active = true`,
@@ -84,16 +85,19 @@ export const requireRole = (...allowedRoles) => {
         return res.status(403).json({ status: 'error', message: 'Forbidden: admin tidak aktif.' });
       }
 
-      const roleSlug = roleQuery.rows[0].role_slug;
+      const roleSlug = (roleQuery.rows[0].role_slug || '').toLowerCase();
+      const roleName = roleQuery.rows[0].role_name;
+      const normalizedAllowedRoles = allowedRoles.map((item) => String(item).toLowerCase());
 
-      if (allowedRoles.includes(roleSlug)) {
+      if (normalizedAllowedRoles.includes(roleSlug)) {
         req.admin.role_slug = roleSlug;
+        req.admin.role_name = roleName;
         return next();
       }
 
       return res.status(403).json({
         status: 'error',
-        message: `Forbidden: role "${roleSlug}" tidak diizinkan. Required: ${allowedRoles.join(', ')}.`
+        message: `Forbidden: role "${roleName || roleSlug}" tidak diizinkan. Required: ${allowedRoles.join(', ')}.`
       });
 
     } catch (error) {

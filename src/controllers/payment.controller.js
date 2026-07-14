@@ -34,6 +34,18 @@ export const createTransaction = async (req, res) => {
       });
     }
 
+    const existingPayment = await pool.query(
+      `SELECT id, status FROM payments WHERE order_id = $1 AND status IN ('pending', 'settlement') LIMIT 1`,
+      [orderId]
+    );
+
+    if (existingPayment.rows.length > 0) {
+      return res.status(409).json({
+        status: 'error',
+        message: '[ERROR] Transaksi pembayaran sudah ada untuk pesanan ini.'
+      });
+    }
+
     const midtransOrderId = `JAY-${order.order_code}-${Date.now()}`;
 
     let parameter = {

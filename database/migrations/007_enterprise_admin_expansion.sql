@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS admin_allowed_ips (
 -- 3. OPERATIONAL EXCELLENCE: Tabel Catatan Internal untuk Tim Manajemen Pesanan
 CREATE TABLE IF NOT EXISTS order_internal_notes (
     id SERIAL PRIMARY KEY,
-    order_id INT NOT NULL, -- Relasi ke tabel orders utama
-    admin_id UUID REFERENCES admins(id) ON DELETE SET NULL, -- Kompatibel dengan UUID admins.id
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    admin_id UUID REFERENCES admins(id) ON DELETE SET NULL,
     note TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS order_internal_notes (
 -- 4. PDPA COMPLIANCE (UU No. 27/2022): Log Persetujuan & Workflow Penghapusan Data Pribadi
 CREATE TABLE IF NOT EXISTS pdpa_consent_audits (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     action_type VARCHAR(50) NOT NULL, -- 'CONSENT_GIVEN', 'DATA_EXPORT_REQ', 'PURGE_REQUEST'
     details JSONB, -- Menyimpan data payload apa yang diekspor/dihapus
     ip_address VARCHAR(45),

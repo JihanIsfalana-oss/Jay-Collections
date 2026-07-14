@@ -13,6 +13,7 @@ import coupleRoutes from './routes/couple.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import rateLimit from 'express-rate-limit';
 
+
 const app = express();
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
@@ -59,8 +60,8 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 app.get('/', (req, res) => {
   res.json({
@@ -106,7 +107,16 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
+app.post('/api/auth/login', (req, res, next) => {
+  console.log('[DEBUG] /api/auth/login hit with body:', req.body);
+  next();
+});
+app.post('/auth/login', (req, res, next) => {
+  console.log('[DEBUG] /auth/login hit with body:', req.body);
+  next();
+});
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/payments', paymentRoutes);

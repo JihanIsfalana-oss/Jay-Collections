@@ -161,8 +161,11 @@ export const updateOrderStatus = async (req, res) => {
   }
 
   try {
-    const orderCheck = await pool.query('SELECT id, status FROM orders WHERE id = $1', [id]);
+    await pool.query('BEGIN');
+
+    const orderCheck = await pool.query('SELECT id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
     if (orderCheck.rows.length === 0) {
+      await pool.query('ROLLBACK');
       return res.status(404).json({ status: 'error', message: 'Order tidak ditemukan.' });
     }
 
@@ -173,11 +176,13 @@ export const updateOrderStatus = async (req, res) => {
       [status, id]
     );
 
-    // Set session variables for trigger (gunakan parameterized query untuk mencegah SQL injection!)
-    await pool.query("SET LOCAL app.changed_by_type = 'admin'");
-    await pool.query('SET LOCAL app.changed_by_id = $1', [adminId]);
-    if (note) {
-      await pool.query('SET LOCAL app.status_change_note = $1', [note]);
+    const escapedAdminId = String(adminId).replace(/'/g, "''");
+    const escapedNote = note ? String(note).replace(/'/g, "''") : '';
+
+    await pool.query(`SET LOCAL app.changed_by_type = 'admin'`);
+    await pool.query(`SET LOCAL app.changed_by_id = '${escapedAdminId}'`);
+    if (escapedNote) {
+      await pool.query(`SET LOCAL app.status_change_note = '${escapedNote}'`);
     }
 
     await pool.query(
@@ -186,12 +191,15 @@ export const updateOrderStatus = async (req, res) => {
       [adminId, id, JSON.stringify({ from: oldStatus, to: status, note })]
     );
 
+    await pool.query('COMMIT');
+
     res.status(200).json({
       status: 'success',
       message: 'Status order berhasil diupdate.',
       data: result.rows[0]
     });
   } catch (error) {
+    await pool.query('ROLLBACK').catch(() => {});
     console.error('[ERROR] Update Order Status:', error);
     res.status(500).json({ status: 'error', message: 'Gagal mengupdate status order.' });
   }

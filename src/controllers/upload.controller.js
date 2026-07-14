@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import axios from 'axios';
+import pool from '../config/db.js';
 
 cloudinary.config({ 
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
@@ -44,6 +45,11 @@ export const getUploadTicket = async (req, res) => {
       }
     }
 
+    const orderCheck = await pool.query('SELECT id FROM orders WHERE id = $1 AND user_id = $2', [orderId, userId]);
+    if (orderCheck.rows.length === 0) {
+      return res.status(404).json({ status: 'error', message: '[ERROR] Order tidak ditemukan untuk user ini.' });
+    }
+
     const timestamp = Math.round((new Date).getTime() / 1000);
     const folderPath = `jay_collections/order_${orderId}`;
 
@@ -74,5 +80,37 @@ export const getUploadTicket = async (req, res) => {
   } catch (error) {
     console.error('Error generate upload ticket:', error);
     res.status(500).json({ status: 'error', message: '[ERROR] Gagal membuat tiket upload.' });
+  }
+};
+
+export const saveUploadRecord = async (req, res) => {
+  const { orderId, publicId, url, format, fileSizeKb, mimeType, caption, displayOrder, assetType } = req.body;
+  const userId = req.user.id;
+
+  if (!orderId || !publicId || !url) {
+    return res.status(400).json({ status: 'error', message: '[ERROR] Data upload tidak lengkap.' });
+  }
+
+  try {
+    const orderCheck = await pool.query('SELECT id FROM orders WHERE id = $1 AND user_id = $2', [orderId, userId]);
+    if (orderCheck.rows.length === 0) {
+      return res.status(404).json({ status: 'error', message: '[ERROR] Order tidak ditemukan untuk user ini.' });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO order_assets (order_id, asset_type, cloudinary_public_id, cloudinary_url, cloudinary_format, file_size_kb, mime_type, caption, display_order)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+       RETURNING *`,
+      [orderId, assetType || 'photo', publicId, url, format || null, fileSizeKb || null, mimeType || null, caption || null, displayOrder || 0]
+    );
+
+    return res.status(201).json({
+      status: 'success',
+      message: '[SUCCESS] File upload berhasil dicatat.',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('[ERROR] Save Upload Record:', error);
+    return res.status(500).json({ status: 'error', message: '[ERROR] Gagal mencatat file upload.' });
   }
 };

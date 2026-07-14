@@ -31,10 +31,6 @@ yarn-debug.log*
 yarn-error.log*
 npm-debug.log*
 eslintcache
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-package.json
 !.gitignore
 
 # --- Python / FastAPI (AI Microservice) ---
@@ -95,3 +91,10 @@ Desktop.ini
 ngrok.exe
 testing postman.txt
 postman_collection.json
+tmp-check-auth.mjs
+tmp-login-debug.mjs
+tests/
+images/
+screenshots/
+snapshots/
+debug.log

@@ -21,7 +21,28 @@ pool.on('connect', () => {
 
 pool.on('error', (err) => {
   console.error('[ERROR] pada database client:', err);
-  process.exit(1);
+});
+
+let isShuttingDown = false;
+
+const gracefulShutdown = async () => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+
+  try {
+    await pool.end();
+    console.log('[INFO] Pool database ditutup dengan aman.');
+  } catch (shutdownError) {
+    console.error('[ERROR] Gagal menutup pool database:', shutdownError);
+  }
+};
+
+process.on('SIGINT', () => {
+  gracefulShutdown().finally(() => process.exit(0));
+});
+
+process.on('SIGTERM', () => {
+  gracefulShutdown().finally(() => process.exit(0));
 });
 
 export const query = (text, params) => pool.query(text, params);

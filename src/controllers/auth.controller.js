@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
+import { buildUserTokenPayload } from '../utils/authToken.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -56,48 +57,77 @@ export const register = async (req, res) => {
 // 2. FITUR LOGIN & REDIS BAN LOGIC 24 JAM
 // ==========================================
 export const login = async (req, res) => {
-  const { username, password } = req.body;
-  const redisKey = `login_count:${username}`;
+  console.log('[AUTH LOGIN] received body:', req.body);
+  const { username, email, identifier, user, password } = req.body;
+  const loginIdentifier = username || email || identifier || user;
+  console.log('[AUTH LOGIN] parsed identifier:', loginIdentifier);
+
+  if (!loginIdentifier || !password) {
+    return res.status(400).json({
+      status: 'error',
+      message: '[ERROR] Username/email dan password wajib diisi.'
+    });
+  }
+
+  const redisKey = `login_count:${loginIdentifier}`;
+  let attempts = null;
+
   try {
-    // A. Cek Status Ban di Redis
-    const attempts = await redisClient.get(redisKey);
-    if (attempts && parseInt(attempts) >= 10) {
-      return res.status(403).json({ 
-        status: 'error', 
-        message: '[ERROR] Akun Anda diblokir selama 24 jam karena terlalu banyak percobaan login yang gagal.' 
+    // A. Cek Status Ban di Redis jika tersedia
+    attempts = await redisClient.get(redisKey);
+    if (attempts && parseInt(attempts, 10) >= 10) {
+      return res.status(403).json({
+        status: 'error',
+        message: '[ERROR] Akun Anda diblokir selama 24 jam karena terlalu banyak percobaan login yang gagal.'
       });
     }
+  } catch (redisError) {
+    console.warn('[WARN] Redis tidak tersedia untuk rate-limit login:', redisError.message);
+  }
 
+  try {
     const userQuery = await pool.query(
-      'SELECT * FROM users WHERE username = $1 OR email = $1', 
-      [username]
+      'SELECT * FROM users WHERE username = $1 OR email = $1',
+      [loginIdentifier]
     );
     const user = userQuery.rows[0];
 
     if (!user || !user.password_hash) {
-      if (attempts) {
-        await redisClient.incr(redisKey);
-      } else {
-        await redisClient.set(redisKey, 1, 'EX', 86400); // Banned Expire 24 Jam
+      try {
+        if (attempts) {
+          await redisClient.incr(redisKey);
+        } else {
+          await redisClient.set(redisKey, 1, 'EX', 86400);
+        }
+      } catch (redisError) {
+        console.warn('[WARN] Redis tidak tersedia untuk mencatat percobaan login:', redisError.message);
       }
       return res.status(400).json({ status: 'error', message: '[ERROR] Username atau Password salah!' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      if (attempts) {
-        await redisClient.incr(redisKey);
-      } else {
-        await redisClient.set(redisKey, 1, 'EX', 86400);
+      try {
+        if (attempts) {
+          await redisClient.incr(redisKey);
+        } else {
+          await redisClient.set(redisKey, 1, 'EX', 86400);
+        }
+      } catch (redisError) {
+        console.warn('[WARN] Redis tidak tersedia untuk mencatat percobaan login:', redisError.message);
       }
       return res.status(400).json({ status: 'error', message: '[ERROR] Username atau Password salah!' });
     }
 
-    // Login Sukses -> Hapus counter kesalahan login di Redis
-    await redisClient.del(redisKey);
+    // Login Sukses -> Hapus counter kesalahan login di Redis jika tersedia
+    try {
+      await redisClient.del(redisKey);
+    } catch (redisError) {
+      console.warn('[WARN] Redis tidak tersedia untuk membersihkan counter login:', redisError.message);
+    }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: 'user' },
+      buildUserTokenPayload(user),
       getJwtSecret(),
       { expiresIn: '7d' }
     );
@@ -177,7 +207,7 @@ export const googleLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: 'user' },
+      buildUserTokenPayload(user),
       getJwtSecret(),
       { expiresIn: '7d' }
     );
