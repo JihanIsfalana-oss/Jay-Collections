@@ -14,41 +14,71 @@ const snap = new midtransClient.Snap({
 export const createTransaction = async (req, res) => {
   const { orderId } = req.body;
   const userId = req.user.id;
+  const client = await pool.connect();
+  let transactionStarted = false;
+
+  const rollbackTransaction = async () => {
+    if (transactionStarted) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
+    }
+  };
 
   try {
-    const orderQuery = await pool.query(
-      'SELECT id, order_code, total_amount, status FROM orders WHERE id = $1 AND user_id = $2',
+    await client.query('BEGIN');
+    transactionStarted = true;
+
+    // Mencegah double-click / concurrent request memicu tiket ganda
+    const orderQuery = await client.query(
+      'SELECT id, order_code, total_amount, status FROM orders WHERE id = $1 AND user_id = $2 FOR UPDATE',
       [orderId, userId]
     );
     const order = orderQuery.rows[0];
 
     if (!order) {
+      await rollbackTransaction();
       return res.status(404).json({ status: 'error', message: '[ERROR] Pesanan tidak ditemukan!' });
+    }
+
+    // Jika pesanan sudah dibayar atau selesai, cegah pembuatan transaksi baru
+    if (['paid', 'completed', 'in_progress', 'ready'].includes(order.status)) {
+      await rollbackTransaction();
+      return res.status(400).json({ status: 'error', message: '[ERROR] Pesanan ini sudah lunas atau sedang diproses!' });
     }
 
     const amount = parseFloat(order.total_amount);
     if (!amount || amount <= 0) {
-      return res.status(400).json({ 
-        status: 'error', 
-        message: '[ERROR] Tidak dapat menginisiasi transaksi. Nominal harga pesanan kosong atau tidak valid!' 
+      await rollbackTransaction();
+      return res.status(400).json({
+        status: 'error',
+        message: '[ERROR] Tidak dapat menginisiasi transaksi. Nominal harga pesanan tidak valid!'
       });
     }
 
-    const existingPayment = await pool.query(
-      `SELECT id, status FROM payments WHERE order_id = $1 AND status IN ('pending', 'settlement') LIMIT 1`,
+    // Periksa riwayat pembayaran yang ada di database
+    const existingPayment = await client.query(
+      `SELECT id, midtrans_order_id, status FROM payments WHERE order_id = $1 LIMIT 1`,
       [orderId]
     );
 
-    if (existingPayment.rows.length > 0) {
+    // Tolak jika pembayaran sebelumnya sudah berstatus sukses/settlement
+    if (existingPayment.rows.length > 0 && ['settlement', 'capture'].includes(existingPayment.rows[0].status)) {
+      await rollbackTransaction();
       return res.status(409).json({
         status: 'error',
-        message: '[ERROR] Transaksi pembayaran sudah ada untuk pesanan ini.'
+        message: '[ERROR] Pembayaran untuk pesanan ini sudah berhasil diselesaikan!'
       });
     }
 
-    const midtransOrderId = `JAY-${order.order_code}-${Date.now()}`;
+    // Gunakan kembali ID transaksi yang sama jika statusnya masih pending (menghindari spam registrasi di Midtrans)
+    let midtransOrderId;
+    if (existingPayment.rows.length > 0 && existingPayment.rows[0].status === 'pending') {
+      midtransOrderId = existingPayment.rows[0].midtrans_order_id;
+    } else {
+      midtransOrderId = `JAY-${order.order_code}-${Date.now()}`;
+    }
 
-    let parameter = {
+    const parameter = {
       transaction_details: {
         order_id: midtransOrderId,
         gross_amount: amount,
@@ -59,16 +89,30 @@ export const createTransaction = async (req, res) => {
       },
     };
 
+    // Panggil Midtrans Snap API
     const transaction = await snap.createTransaction(parameter);
     const snapToken = transaction.token;
 
-    await pool.query(
-      `INSERT INTO payments (order_id, midtrans_order_id, amount, status) 
+    // Simpan/Perbarui data pembayaran
+    await client.query(
+      `INSERT INTO payments (order_id, midtrans_order_id, amount, status)
        VALUES ($1, $2, $3, 'pending')
-       ON CONFLICT (order_id) DO UPDATE 
+       ON CONFLICT (order_id) DO UPDATE
        SET midtrans_order_id = $2, amount = $3, status = 'pending', updated_at = NOW()`,
       [orderId, midtransOrderId, amount]
     );
+
+    await client.query(`SELECT set_config('app.changed_by_type', 'user', true)`);
+    await client.query(`SELECT set_config('app.changed_by_id', $1, true)`, [String(userId)]);
+    await client.query(`SELECT set_config('app.status_change_note', 'Menunggu pembayaran di Midtrans', true)`);
+
+    await client.query(
+      `UPDATE orders SET status = 'pending_payment', updated_at = NOW() WHERE id = $1`,
+      [orderId]
+    );
+
+    await client.query('COMMIT');
+    transactionStarted = false;
 
     return res.status(200).json({
       status: 'success',
@@ -78,10 +122,20 @@ export const createTransaction = async (req, res) => {
         midtrans_order_id: midtransOrderId
       }
     });
-
   } catch (error) {
+    await rollbackTransaction();
+
+    if (error?.code === '23505') {
+      return res.status(409).json({
+        status: 'error',
+        message: '[ERROR] Transaksi pembayaran sudah ada untuk pesanan ini.'
+      });
+    }
+
     console.error('[ERROR] Inisiasi Transaksi Midtrans Gagal:', error);
     return res.status(500).json({ status: 'error', message: '[ERROR] Gagal membuat transaksi pembayaran.' });
+  } finally {
+    client.release();
   }
 };
 
@@ -90,6 +144,8 @@ export const createTransaction = async (req, res) => {
 // ==========================================
 export const midtransWebhook = async (req, res) => {
   const data = req.body;
+  const client = await pool.connect();
+  let transactionStarted = false;
 
   try {
     const hash = crypto
@@ -98,6 +154,7 @@ export const midtransWebhook = async (req, res) => {
       .digest('hex');
 
     if (hash !== data.signature_key) {
+      client.release();
       return res.status(403).json({ status: 'error', message: '[WARNING] Ilegal Webhook Signature Key!' });
     }
 
@@ -125,9 +182,11 @@ export const midtransWebhook = async (req, res) => {
       paymentStatus = 'pending';
     }
 
-    await pool.query('BEGIN');
+    await client.query('BEGIN');
+    transactionStarted = true;
 
-    const updatePayment = await pool.query(
+    // Update data pembayaran di database
+    const updatePayment = await client.query(
       `UPDATE payments 
        SET status = $1, midtrans_transaction_id = $2, midtrans_status = $3, payment_method = $4, raw_callback = $5, updated_at = NOW()
        WHERE midtrans_order_id = $6 RETURNING order_id`,
@@ -136,15 +195,25 @@ export const midtransWebhook = async (req, res) => {
 
     if (updatePayment.rows.length > 0) {
       const orderId = updatePayment.rows[0].order_id;
-      await pool.query('UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2', [orderStatus, orderId]);
+
+      // Integrasi ke audit logs trigger dengan mendaftarkan sistem webhook sebagai pengubah
+      await client.query(`SELECT set_config('app.changed_by_type', 'system', true)`);
+      await client.query(`SELECT set_config('app.status_change_note', $1, true)`, [`Midtrans webhook notification: ${transactionStatus}`]);
+
+      await client.query('UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2', [orderStatus, orderId]);
     }
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
+    transactionStarted = false;
+    
     return res.status(200).json({ status: 'success' });
-
   } catch (error) {
-    await pool.query('ROLLBACK');
-    console.error('[ERROR]:', error);
+    if (transactionStarted) {
+      await client.query('ROLLBACK').catch(() => {});
+    }
+    console.error('[ERROR Webhook Midtrans]:', error);
     return res.status(500).json({ status: 'error', message: '[ERROR] Gagal memproses webhook Midtrans.' });
+  } finally {
+    client.release();
   }
 };

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -32,6 +32,8 @@
     "redis": "^6.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "jsdom": "^29.1.1",
+    "nodemon": "^3.1.14",
+    "vitest": "^4.1.10"
   }
 }

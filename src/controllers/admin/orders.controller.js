@@ -171,19 +171,17 @@ export const updateOrderStatus = async (req, res) => {
 
     const oldStatus = orderCheck.rows[0].status;
 
+    await pool.query(`SELECT set_config('app.changed_by_type', 'admin', true)`);
+    await pool.query(`SELECT set_config('app.changed_by_id', $1, true)`, [String(adminId)]);
+    if (note) {
+      await pool.query(`SELECT set_config('app.status_change_note', $1, true)`, [String(note)]);
+    }
+
     const result = await pool.query(
       `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, id]
     );
 
-    const escapedAdminId = String(adminId).replace(/'/g, "''");
-    const escapedNote = note ? String(note).replace(/'/g, "''") : '';
-
-    await pool.query(`SET LOCAL app.changed_by_type = 'admin'`);
-    await pool.query(`SET LOCAL app.changed_by_id = '${escapedAdminId}'`);
-    if (escapedNote) {
-      await pool.query(`SET LOCAL app.status_change_note = '${escapedNote}'`);
-    }
 
     await pool.query(
       `INSERT INTO admin_audit_logs (admin_id, action, target_table, target_id, details) 
