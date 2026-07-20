@@ -167,7 +167,7 @@ export const midtransWebhook = async (req, res) => {
 
     if (transactionStatus == 'capture') {
       if (fraudStatus == 'challenge') {
-        paymentStatus = 'challenge';
+        paymentStatus = 'pending';
       } else if (fraudStatus == 'accept') {
         paymentStatus = 'settlement';
         orderStatus = 'paid';
@@ -175,8 +175,14 @@ export const midtransWebhook = async (req, res) => {
     } else if (transactionStatus == 'settlement') {
       paymentStatus = 'settlement';
       orderStatus = 'paid';
-    } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
-      paymentStatus = 'failure';
+    } else if (transactionStatus == 'deny') {
+      paymentStatus = 'deny';
+      orderStatus = 'cancelled';
+    } else if (transactionStatus == 'cancel') {
+      paymentStatus = 'cancel';
+      orderStatus = 'cancelled';
+    } else if (transactionStatus == 'expire') {
+      paymentStatus = 'expire';
       orderStatus = 'cancelled';
     } else if (transactionStatus == 'pending') {
       paymentStatus = 'pending';

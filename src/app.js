@@ -24,7 +24,44 @@ const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100 // limit each IP to 100 requests per windowMs
 });
+
 app.use(limiter);
+
+let server;
+
+// Menangani Graceful Shutdown secara anggun
+const gracefulShutdown = () => {
+  console.log('[INFO] Server dimatikan...');
+  
+  if (server) {
+    server.close(() => {
+      console.log('[INFO] Server HTTP ditutup.');
+      
+      // Tutup koneksi database pool
+      pool.end(() => {
+        console.log('[INFO] Menutup Pool Database...');
+      });
+
+      // Tutup koneksi Redis
+      redisClient.quit().then(() => {
+        console.log('[INFO] Sesi Redis Client berhasil diputus.');
+        process.exit(0);
+      });
+    });
+  } else {
+    process.exit(0);
+  }
+
+  // Paksa shutdown setelah 5 detik jika stuck
+  setTimeout(() => {
+    console.error('[WARNING] Shutdown terlampaui. Memaksa shutdown...');
+    process.exit(1);
+  }, 5000);
+};
+
+// Daftarkan sinyal shutdown dari terminal (Ctrl + C)
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -33,7 +70,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "https://app.midtrans.com", "https://api.midtrans.com"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
-      connectSrc: ["'self'", "https://api.midtrans.com"],
+      connectSrc: ["'self'", "https://api.midtrans.com", ...(process.env.NODE_ENV === 'development' ? ["http://localhost:5000", "http://127.0.0.1:5000"] : [])],
       frameSrc: ["'self'", "https://app.midtrans.com"],
     },
   },
@@ -141,13 +178,18 @@ async function startServer() {
   }
 
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
+  
+  // Memasang instance listener ke variabel 'server' global agar bisa di-shutdown secara graceful
+  server = app.listen(PORT, () => {
     console.log(`[INFO] Server berjalan di port ${PORT} [Mode: ${process.env.NODE_ENV || 'development'}]`);
 
     pool.query('SELECT 1')
       .then(() => console.log('[INFO] Database berhasil terhubung!'))
       .catch((err) => console.error('[ERROR] Gagal menghubungkan ke database lokal:', err.message));
   });
+
+  server.keepAliveTimeout = 5000; 
+  server.headersTimeout = 6000;   
 }
 
 startServer();

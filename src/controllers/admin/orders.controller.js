@@ -1,5 +1,18 @@
 import pool from '../../config/db.js';
 
+const allowedStatusTransitions = {
+  draft: ['pending_payment', 'cancelled'],
+  pending_payment: ['paid', 'cancelled'],
+  paid: ['in_queue', 'cancelled', 'refunded'],
+  in_queue: ['in_progress', 'cancelled'],
+  in_progress: ['review', 'cancelled'],
+  review: ['ready', 'cancelled'],
+  ready: ['completed', 'refunded'],
+  completed: [],
+  cancelled: [],
+  refunded: []
+};
+
 // ========================================================
 // 1. LIST SEMUA ORDER (DENGAN PAGINATION & FILTER)
 // ========================================================
@@ -155,41 +168,66 @@ export const updateOrderStatus = async (req, res) => {
   const { status, note } = req.body;
   const adminId = req.admin.admin_id || req.admin.id;
   const validStatuses = ['draft', 'pending_payment', 'paid', 'in_queue', 'in_progress', 'review', 'ready', 'completed', 'cancelled', 'refunded'];
+  const client = await pool.connect();
+  let transactionStarted = false;
 
   if (!validStatuses.includes(status)) {
     return res.status(400).json({ status: 'error', message: `Status tidak valid. Gunakan: ${validStatuses.join(', ')}` });
   }
 
   try {
-    await pool.query('BEGIN');
+    await client.query('BEGIN');
+    transactionStarted = true;
 
-    const orderCheck = await pool.query('SELECT id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
+    const orderCheck = await client.query('SELECT id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
     if (orderCheck.rows.length === 0) {
-      await pool.query('ROLLBACK');
+      await client.query('ROLLBACK');
+      transactionStarted = false;
       return res.status(404).json({ status: 'error', message: 'Order tidak ditemukan.' });
     }
 
     const oldStatus = orderCheck.rows[0].status;
 
-    await pool.query(`SELECT set_config('app.changed_by_type', 'admin', true)`);
-    await pool.query(`SELECT set_config('app.changed_by_id', $1, true)`, [String(adminId)]);
-    if (note) {
-      await pool.query(`SELECT set_config('app.status_change_note', $1, true)`, [String(note)]);
+    if (oldStatus === status) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
+      return res.status(200).json({
+        status: 'success',
+        message: 'Status order sudah berada pada nilai tersebut.',
+        data: orderCheck.rows[0]
+      });
     }
 
-    const result = await pool.query(
+    const allowedTargets = allowedStatusTransitions[oldStatus] || [];
+    if (!allowedTargets.includes(status)) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
+      return res.status(400).json({
+        status: 'error',
+        message: `Transisi status tidak valid: ${oldStatus} → ${status}.`
+      });
+    }
+
+    await client.query(`SELECT set_config('app.changed_by_type', 'admin', true)`);
+    await client.query(`SELECT set_config('app.changed_by_id', $1, true)`, [String(adminId)]);
+    if (note) {
+      await client.query(`SELECT set_config('app.status_change_note', $1, true)`, [String(note)]);
+    }
+
+    const result = await client.query(
       `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, id]
     );
 
 
-    await pool.query(
+    await client.query(
       `INSERT INTO admin_audit_logs (admin_id, action, target_table, target_id, details) 
        VALUES ($1, 'UPDATE_ORDER_STATUS', 'orders', $2, $3)`,
       [adminId, id, JSON.stringify({ from: oldStatus, to: status, note })]
     );
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
+    transactionStarted = false;
 
     res.status(200).json({
       status: 'success',
@@ -197,9 +235,13 @@ export const updateOrderStatus = async (req, res) => {
       data: result.rows[0]
     });
   } catch (error) {
-    await pool.query('ROLLBACK').catch(() => {});
+    if (transactionStarted) {
+      await client.query('ROLLBACK').catch(() => {});
+    }
     console.error('[ERROR] Update Order Status:', error);
     res.status(500).json({ status: 'error', message: 'Gagal mengupdate status order.' });
+  } finally {
+    client.release();
   }
 };
 
@@ -210,32 +252,47 @@ export const assignOrder = async (req, res) => {
   const { id } = req.params;
   const { engineer_id, internal_notes } = req.body;
   const adminId = req.admin.admin_id || req.admin.id;
+  const client = await pool.connect();
+  let transactionStarted = false;
 
   if (!engineer_id) {
     return res.status(400).json({ status: 'error', message: 'engineer_id wajib diisi.' });
   }
 
   try {
-    const orderCheck = await pool.query('SELECT id FROM orders WHERE id = $1', [id]);
+    await client.query('BEGIN');
+    transactionStarted = true;
+
+    const orderCheck = await client.query('SELECT id, status FROM orders WHERE id = $1 FOR UPDATE', [id]);
     if (orderCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
       return res.status(404).json({ status: 'error', message: 'Order tidak ditemukan.' });
     }
 
-    const engineerCheck = await pool.query(
+    if (['completed', 'cancelled', 'refunded'].includes(orderCheck.rows[0].status)) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
+      return res.status(400).json({ status: 'error', message: 'Order yang sudah selesai atau dibatalkan tidak dapat di-assign.' });
+    }
+
+    const engineerCheck = await client.query(
       `SELECT a.id FROM admins a JOIN admin_roles r ON a.role_id = r.id WHERE a.id = $1 AND r.role_slug = 'engineer' AND a.is_active = true`,
       [engineer_id]
     );
     if (engineerCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
       return res.status(400).json({ status: 'error', message: 'Engineer tidak ditemukan atau tidak aktif.' });
     }
 
     // Mark previous assignments as reassigned
-    await pool.query(
+    await client.query(
       `UPDATE order_assignments SET assignment_status = 'reassigned' WHERE order_id = $1 AND assignment_status NOT IN ('completed', 'reassigned')`,
       [id]
     );
 
-    const result = await pool.query(
+    const result = await client.query(
       `INSERT INTO order_assignments (order_id, assigned_to_admin_id, assigned_by_admin_id, internal_notes, assignment_status)
        VALUES ($1, $2, $3, $4, 'assigned')
        RETURNING *`,
@@ -243,16 +300,19 @@ export const assignOrder = async (req, res) => {
     );
 
     // Auto-update order status to in_queue if still draft/pending_payment
-    await pool.query(
+    await client.query(
       `UPDATE orders SET status = CASE WHEN status IN ('draft','pending_payment') THEN 'in_queue' ELSE status END, updated_at = NOW() WHERE id = $1`,
       [id]
     );
 
-    await pool.query(
+    await client.query(
       `INSERT INTO admin_audit_logs (admin_id, action, target_table, target_id, details) 
        VALUES ($1, 'ASSIGN_ORDER', 'order_assignments', $2, $3)`,
       [adminId, result.rows[0].id, JSON.stringify({ order_id: id, assigned_to: engineer_id })]
     );
+
+    await client.query('COMMIT');
+    transactionStarted = false;
 
     res.status(200).json({
       status: 'success',
@@ -260,8 +320,13 @@ export const assignOrder = async (req, res) => {
       data: result.rows[0]
     });
   } catch (error) {
+    if (transactionStarted) {
+      await client.query('ROLLBACK').catch(() => {});
+    }
     console.error('[ERROR] Assign Order:', error);
     res.status(500).json({ status: 'error', message: 'Gagal meng-assign order.' });
+  } finally {
+    client.release();
   }
 };
 

@@ -30,6 +30,9 @@ import { getAuditLogs, getAuditDetail } from '../controllers/admin/audit.control
 // IP Whitelist
 import { getAllowedIps, addAllowedIp, deleteAllowedIp } from '../controllers/admin/ip.controller.js';
 
+// MFA Setup
+import { setupMfa, enableMfa } from '../controllers/admin/mfa-setup.controller.js';
+
 const router = express.Router();
 
 // ================================================================
@@ -120,5 +123,11 @@ router.delete('/ip-whitelist/:id', verifyAdminToken, requirePermission('can_mana
 // LOGOUT — endpoint umum untuk semua admin yang sudah login
 // ================================================================
 router.post('/logout', verifyAdminToken, adminLogout);
+
+// ================================================================
+// MFA — endpoint untuk setup dan enable MFA
+// ================================================================
+router.post('/mfa/setup', verifyAdminToken, setupMfa);
+router.post('/mfa/enable', verifyAdminToken, enableMfa);
 
 export default router;

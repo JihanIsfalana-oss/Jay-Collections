@@ -2,6 +2,7 @@ import pool from '../config/db.js';
 import redisClient from '../config/redis.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import speakeasy from 'speakeasy';
 
 // Helper strict untuk mengambil JWT Secret Admin 
 const getAdminSecret = () => {
@@ -54,19 +55,24 @@ export const adminLogin = async (req, res) => {
     }
 
     // Verifikasi IP Whitelisting
-    const ipCheck = await pool.query('SELECT ip_address FROM admin_allowed_ips');
-    if (ipCheck.rows.length > 0) {
-      const allowedIps = ipCheck.rows.map(row => row.ip_address);
-      if (!allowedIps.includes(clientIp)) {
-        await pool.query(
-          `INSERT INTO admin_audit_logs (admin_id, action, target_table, details, ip_address, user_agent) 
-           VALUES ($1, 'BLOCKED_BY_IP_WHITELIST', 'admins', $2, $3, $4)`,
-          [admin.id, JSON.stringify({ attempted_ip: clientIp }), clientIp, userAgent]
-        );
-        return res.status(403).json({ 
-          status: 'error', 
-          message: `IP Anda (${clientIp}) tidak terdaftar dalam whitelist!` 
-        });
+    const isSuperAdmin = admin.role_name === 'Super Admin';
+    const bypassEnabled = process.env.SUPER_ADMIN_BYPASS_IPS === 'true';
+
+    if (!(isSuperAdmin && bypassEnabled)) {
+      const ipCheck = await pool.query('SELECT ip_address FROM admin_allowed_ips');
+      if (ipCheck.rows.length > 0) {
+        const allowedIps = ipCheck.rows.map(row => row.ip_address);
+        if (!allowedIps.includes(clientIp)) {
+          await pool.query(
+            `INSERT INTO admin_audit_logs (admin_id, action, target_table, details, ip_address, user_agent) 
+            VALUES ($1, 'BLOCKED_BY_IP_WHITELIST', 'admins', $2, $3, $4)`,
+            [admin.id, JSON.stringify({ attempted_ip: clientIp }), clientIp, userAgent]
+          );
+          return res.status(403).json({ 
+            status: 'error', 
+            message: `IP Anda (${clientIp}) tidak terdaftar dalam whitelist!` 
+          });
+        }
       }
     }
 
@@ -108,7 +114,7 @@ export const adminLogin = async (req, res) => {
     // Audit Log
     await pool.query(
       `INSERT INTO admin_audit_logs (admin_id, action, target_table, details, ip_address, user_agent) 
-       VALUES ($1, 'LOGIN_SUCCESS', 'admins', $2, $3, $4)`,
+      VALUES ($1, 'LOGIN_SUCCESS', 'admins', $2, $3, $4)`,
       [admin.id, JSON.stringify({ session_status: 'active' }), clientIp, userAgent]
     );
 
@@ -160,16 +166,27 @@ export const verifyAdminMfa = async (req, res) => {
     }
 
     // Validasi kode MFA — jika TOTP secret tersimpan, verifikasi real; fallback ke kode statis untuk development
-    if (admin.totp_secret) {
-      // TODO: Implementasi verifikasi TOTP dengan library seperti speakeasy
-      // Untuk sekarang, gunakan kode statis
-      if (mfa_code !== '123456') {
-        return res.status(400).json({ status: 'error', message: 'Kode MFA salah!' });
-      }
-    } else {
-      if (mfa_code !== '123456') {
-        return res.status(400).json({ status: 'error', message: 'Kode MFA salah!' });
-      }
+    if (!admin.mfa_enabled || !admin.totp_secret) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'MFA belum diaktifkan untuk akun ini. Hubungi super admin.' 
+      });
+    }
+
+    const isValidTotp = speakeasy.totp.verify({
+      secret: admin.totp_secret,
+      encoding: 'base32',
+      token: mfa_code,
+      window: 1 // toleransi 1 step (30 detik) untuk clock drift
+    });
+
+    if (!isValidTotp) {
+      await pool.query(
+        `INSERT INTO admin_audit_logs (admin_id, action, target_table, details, ip_address, user_agent) 
+        VALUES ($1, 'MFA_FAILED', 'admins', $2, $3, $4)`,
+        [admin.id, JSON.stringify({ reason: 'invalid_totp' }), clientIp, userAgent]
+      );
+      return res.status(400).json({ status: 'error', message: 'Kode MFA salah!' });
     }
 
     const token = jwt.sign(
@@ -186,12 +203,36 @@ export const verifyAdminMfa = async (req, res) => {
       user_agent: userAgent
     };
 
+    // Simpan sesi di Redis Cache
     await redisClient.set(`admin_session:${token}`, JSON.stringify(sessionData), 'EX', 28800);
 
+    // Simpan sesi di PostgreSQL
     await pool.query(
-      `INSERT INTO admin_sessions (admin_id, session_token, expires_at, ip_address, user_agent) 
-       VALUES ($1, $2, NOW() + INTERVAL '8 hours', $3, $4)`,
-      [admin.id, token, clientIp, userAgent]
+      `INSERT INTO admin_sessions
+      (admin_id, session_token, expires_at, ip_address, user_agent)
+      VALUES ($1, $2, NOW() + INTERVAL '8 hours', $3, $4)`,
+      [
+        admin.id,
+        token,
+        clientIp,
+        userAgent
+      ]
+    );
+
+    // Audit Log MFA Success
+    await pool.query(
+      `INSERT INTO admin_audit_logs
+      (admin_id, action, target_table, details, ip_address, user_agent)
+      VALUES ($1, 'LOGIN_SUCCESS', 'admins', $2, $3, $4)`,
+      [
+        admin.id,
+        JSON.stringify({
+          session_status: 'active',
+          login_method: 'mfa'
+        }),
+        clientIp,
+        userAgent
+      ]
     );
 
     return res.status(200).json({

@@ -12,7 +12,7 @@ export function JsonLd({ data }: { data: Record<string, unknown> }) {
 export const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
-  name: "Jay Collection's for Wedding",
+  name: 'Jay Collections for Wedding',
   url: 'https://jaycollection.id',
   description: 'Platform undangan digital pernikahan terbaik di Indonesia.',
   potentialAction: {
@@ -41,7 +41,7 @@ export function designCategorySchema(category: {
     image: category.thumbnail_url,
     brand: {
       '@type': 'Brand',
-      name: "Jay Collection's for Wedding",
+      name: 'Jay Collections for Wedding',
     },
     offers: {
       '@type': 'AggregateOffer',
@@ -55,18 +55,18 @@ export function designCategorySchema(category: {
 export const localBusinessSchema = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
-  name: "Jay Collection's for Wedding",
+  name: 'Jay Collections for Wedding',
   description: 'Jasa pembuatan undangan digital pernikahan.',
   url: 'https://jaycollection.id',
-  telephone: '+62-xxx-xxx-xxxx',       // Isi dengan nomor WhatsApp
+  telephone: '+62-000-0000-0000',
   address: {
     '@type': 'PostalAddress',
     addressCountry: 'ID',
     addressRegion: 'Jawa Barat',
   },
   priceRange: 'IDR',
-  openingHours: 'Mo-Su 00:00-24:00',  // Bisnis digital, 24 jam
+  openingHours: 'Mo-Su 00:00-24:00',
   sameAs: [
-    'https://www.instagram.com/jaycollection',  // Update URL sosmed
+    'https://www.instagram.com/jaycollection',
   ],
 };

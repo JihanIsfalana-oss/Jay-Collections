@@ -83,6 +83,7 @@ CREATE TABLE admin_audit_logs (
   target_id     UUID,                                                     -- ID record yang dimodifikasi
   before_value  JSONB,                                                    -- State sebelum perubahan
   after_value   JSONB,                                                    -- State setelah perubahan
+  details       JSONB,                                                    -- Payload tambahan fleksibel untuk audit
   ip_address    INET,
   notes         TEXT,                                                     -- Catatan tambahan dari admin
   performed_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()

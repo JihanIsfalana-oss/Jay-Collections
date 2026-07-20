@@ -3,6 +3,21 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import {
+  ButtonLink,
+  PageShell,
+  Pill,
+  Surface,
+  bodyTextStyle,
+  cardStyle,
+  containerStyle,
+  gridTwoStyle,
+  inputStyle,
+  labelStyle,
+  mutedSurfaceStyle,
+  subtitleStyle,
+  titleStyle,
+} from '../../../components/site-kit';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,44 +60,89 @@ export default function LoginPage() {
   };
 
   return (
-    <main style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#f9fafb', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 440, background: '#fff', borderRadius: 24, padding: 32, boxShadow: '0 20px 45px rgba(15, 23, 42, 0.08)' }}>
-        <h1 style={{ marginTop: 0, color: '#111827' }}>Masuk</h1>
-        <p style={{ color: '#6b7280', marginBottom: 24 }}>Selamat datang di Platform Wedding Invitation Digital Terbaik di Indonesia.</p>
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
-          <label style={{ display: 'grid', gap: 8 }}>
-            <span>Username atau email</span>
-            <input
-              type="text"
-              value={identifier}
-              onChange={(event) => setIdentifier(event.target.value)}
-              required
-              style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid #d1d5db' }}
-            />
-          </label>
-          <label style={{ display: 'grid', gap: 8 }}>
-            <span>Kata sandi</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              style={{ padding: '12px 14px', borderRadius: 12, border: '1px solid #d1d5db' }}
-            />
-          </label>
-          {error ? <p style={{ color: '#b91c1c', margin: 0 }}>{error}</p> : null}
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ background: '#111827', color: '#fff', padding: '12px 16px', borderRadius: 12, border: 'none', cursor: loading ? 'wait' : 'pointer' }}
-          >
-            {loading ? 'Memproses...' : 'Masuk'}
-          </button>
-        </form>
-        <p style={{ marginTop: 16, color: '#6b7280' }}>
-          Belum punya akun? <Link href="/register" style={{ color: '#d97706' }}>Daftar sekarang</Link>
-        </p>
+    <PageShell>
+      <div style={{ ...containerStyle, padding: '32px 0 56px' }}>
+        <div style={{ ...gridTwoStyle, alignItems: 'stretch' }}>
+          <section style={{ ...cardStyle, borderRadius: 34, padding: '32px clamp(24px, 4vw, 44px)' }}>
+            <Pill>Akses Pengguna</Pill>
+            <h1 style={{ ...titleStyle, marginTop: 18, fontSize: 'clamp(2.3rem, 4.5vw, 4rem)' }}>Masuk dengan alur yang ringkas, aman, dan jelas.</h1>
+            <p style={{ ...subtitleStyle, maxWidth: 620 }}>
+              Gunakan kredensial Anda untuk mengelola referensi desain, memeriksa status pesanan, dan meninjau informasi akun pada satu ruang kerja yang lebih tertata.
+            </p>
+
+            <div style={{ display: 'grid', gap: 14, marginTop: 28 }}>
+              <article style={{ ...mutedSurfaceStyle, borderRadius: 24, padding: 18 }}>
+                <p style={{ margin: 0, fontWeight: 700, color: '#1f2937' }}>Kejelasan akses</p>
+                <p style={{ ...bodyTextStyle, marginTop: 8 }}>Login diarahkan ke pengalaman yang singkat tanpa mengorbankan kejelasan informasi.</p>
+              </article>
+              <article style={{ ...mutedSurfaceStyle, borderRadius: 24, padding: 18 }}>
+                <p style={{ margin: 0, fontWeight: 700, color: '#1f2937' }}>Bahasa baku</p>
+                <p style={{ ...bodyTextStyle, marginTop: 8 }}>Seluruh label dan pesan disusun dengan bahasa Indonesia formal sesuai standar KBBI.</p>
+              </article>
+            </div>
+          </section>
+
+          <Surface style={{ borderRadius: 34, padding: '32px clamp(24px, 4vw, 44px)' }}>
+            <p style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.18em', color: '#b78b2e', fontSize: 12, fontWeight: 800 }}>Formulir masuk</p>
+            <h2 style={{ margin: '10px 0 0', fontFamily: 'var(--font-heading), serif', fontSize: '2rem', color: '#1f2937' }}>Selamat datang kembali</h2>
+            <p style={{ ...bodyTextStyle, marginTop: 10 }}>Masukkan alamat email atau nama pengguna beserta kata sandi Anda.</p>
+
+            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16, marginTop: 24 }}>
+              <label style={labelStyle}>
+                <span>Nama pengguna atau email</span>
+                <input
+                  type="text"
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
+                  required
+                  placeholder="Masukkan alamat email atau nama pengguna"
+                  style={inputStyle}
+                />
+              </label>
+              <label style={labelStyle}>
+                <span>Kata sandi</span>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  placeholder="Masukkan kata sandi"
+                  style={inputStyle}
+                />
+              </label>
+
+              {error ? (
+                <p style={{ margin: 0, color: '#991b1b', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 16, padding: '12px 14px' }}>{error}</p>
+              ) : null}
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  ...inputStyle,
+                  minHeight: 50,
+                  cursor: loading ? 'wait' : 'pointer',
+                  background: 'linear-gradient(135deg, #1f2937 0%, #4b5563 100%)',
+                  color: '#fff',
+                  fontWeight: 700,
+                }}
+              >
+                {loading ? 'Memproses...' : 'Masuk ke dashboard'}
+              </button>
+            </form>
+
+            <p style={{ ...bodyTextStyle, marginTop: 20 }}>
+              Belum memiliki akun?{' '}
+              <Link href="/register" style={{ color: '#b78b2e', fontWeight: 700, textDecoration: 'none' }}>
+                Daftar sekarang
+              </Link>
+            </p>
+            <div style={{ marginTop: 20 }}>
+              <ButtonLink href="/">Kembali ke beranda</ButtonLink>
+            </div>
+          </Surface>
+        </div>
       </div>
-    </main>
+    </PageShell>
   );
 }

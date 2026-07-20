@@ -31,14 +31,20 @@ export const verifyAdminToken = async (req, res, next) => {
     }
 
     // 3. Strict IP Whitelisting Verification
-    const ipCheck = await pool.query('SELECT ip_address FROM admin_allowed_ips');
-    if (ipCheck.rows.length > 0) {
-      const allowedIps = ipCheck.rows.map(row => row.ip_address);
-      if (!allowedIps.includes(clientIp)) {
-        return res.status(403).json({ 
-          status: 'error', 
-          message: `[SECURITY BLOCKED] IP Anda (${clientIp}) tidak memiliki izin akses rute ini!` 
-        });
+    const sessionData = JSON.parse(redisSession);
+    const isSuperAdmin = sessionData.role === 'Super Admin';
+    const bypassEnabled = process.env.SUPER_ADMIN_BYPASS_IPS === 'true';
+
+    if (!(isSuperAdmin && bypassEnabled)) {
+      const ipCheck = await pool.query('SELECT ip_address FROM admin_allowed_ips');
+      if (ipCheck.rows.length > 0) {
+        const allowedIps = ipCheck.rows.map(row => row.ip_address);
+        if (!allowedIps.includes(clientIp)) {
+          return res.status(403).json({ 
+            status: 'error', 
+            message: `[SECURITY BLOCKED] IP Anda (${clientIp}) tidak memiliki izin akses rute ini!` 
+          });
+        }
       }
     }
 

@@ -264,17 +264,25 @@ export const forgotPassword = async (req, res) => {
 // ==========================================
 export const resetPassword = async (req, res) => {
   const { email, token, new_password } = req.body;
+  const client = await pool.connect();
+  let transactionStarted = false;
 
   try {
-    const tokenCheck = await pool.query(
+    await client.query('BEGIN');
+    transactionStarted = true;
+
+    const tokenCheck = await client.query(
       `SELECT pr.id, u.id AS user_id 
        FROM password_resets pr
        JOIN users u ON pr.user_id = u.id
-       WHERE u.email = $1 AND pr.reset_token = $2 AND pr.expires_at > NOW() AND pr.is_used = false`,
+       WHERE u.email = $1 AND pr.reset_token = $2 AND pr.expires_at > NOW() AND pr.is_used = false
+       FOR UPDATE OF pr`,
       [email, token]
     );
 
     if (tokenCheck.rows.length === 0) {
+      await client.query('ROLLBACK');
+      transactionStarted = false;
       return res.status(400).json({ 
         status: 'error', 
         message: '[ERROR] Token reset password tidak valid!' 
@@ -287,19 +295,23 @@ export const resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(new_password, salt);
 
-    await pool.query('BEGIN');
-
-    await pool.query(
+    await client.query(
       'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
       [hashedPassword, userId]
     );
 
-    await pool.query(
-      'UPDATE password_resets SET is_used = true, updated_at = NOW() WHERE id = $1',
+    await client.query(
+      'UPDATE password_resets SET is_used = true WHERE id = $1',
       [resetId]
     );
 
-    await pool.query('COMMIT');
+    await client.query(
+      'DELETE FROM login_sessions WHERE user_id = $1',
+      [userId]
+    );
+
+    await client.query('COMMIT');
+    transactionStarted = false;
 
     return res.status(200).json({ 
       status: 'success', 
@@ -307,8 +319,12 @@ export const resetPassword = async (req, res) => {
     });
 
   } catch (error) {
-    await pool.query('ROLLBACK');
+    if (transactionStarted) {
+      await client.query('ROLLBACK').catch(() => {});
+    }
     console.error('[ERROR] : ', error);
     return res.status(500).json({ status: 'error', message: '[ERROR] Gagal melakukan reset password.' });
+  } finally {
+    client.release();
   }
 };
