@@ -11,6 +11,7 @@ import uploadRoutes from './routes/upload.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import coupleRoutes from './routes/couple.routes.js';
 import adminRoutes from './routes/admin.routes.js';
+import publicRoutes from './routes/public.routes.js';
 import rateLimit from 'express-rate-limit';
 
 
@@ -159,6 +160,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/couples', coupleRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/public', publicRoutes);
 
 // Jalankan Server Express
 app.use((err, req, res, next) => {

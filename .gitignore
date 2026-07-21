@@ -93,8 +93,6 @@ testing postman.txt
 postman_collection.json
 tmp-check-auth.mjs
 tmp-login-debug.mjs
-tests/
-images/
 screenshots/
 snapshots/
 debug.log

@@ -8,15 +8,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let designCategories: Array<{ slug: string; updated_at: string }> = [];
   
   try {
-    const res = await fetch(`${process.env.API_URL}/api/admin/designs/categories`, {
-      next: { revalidate: 3600 }, // Cache 1 jam
+    const res = await fetch(`${process.env.API_URL}/api/public/designs/categories`, {
+      next: { revalidate: 3600 },
     });
+
     if (res.ok) {
       const data = await res.json();
       designCategories = data.data || [];
     }
-  } catch {
+  } catch (err) {
     // Fail gracefully — sitemap tetap generate tanpa dynamic URLs
+    console.error("Sitemap fetch failed:", err);
   }
 
   // Halaman statis publik
