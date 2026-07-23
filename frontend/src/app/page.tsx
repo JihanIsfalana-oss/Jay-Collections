@@ -1,5 +1,7 @@
 import Link from 'next/link';
-import { JsonLd, localBusinessSchema, websiteSchema } from '../components/seo/JsonLd';
+import { JsonLd } from "@/components/seo/JsonLd";
+
+import { designCategorySchema, organizationSchema, websiteSchema, localBusinessSchema } from "@/components/seo/schema";
 import {
   ButtonLink,
   MetricCard,
@@ -71,6 +73,7 @@ export default function HomePage() {
   return (
     <PageShell>
       <JsonLd data={websiteSchema} />
+      <JsonLd data={organizationSchema} />
       <JsonLd data={localBusinessSchema} />
       <div style={{ ...containerStyle, padding: '28px 0 56px' }}>
         <section style={{ ...cardStyle, borderRadius: 36, padding: '32px clamp(24px, 4vw, 48px)' }}>

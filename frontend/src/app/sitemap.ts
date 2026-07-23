@@ -8,7 +8,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let designCategories: Array<{ slug: string; updated_at: string }> = [];
   
   try {
-    const res = await fetch(`${process.env.API_URL}/api/public/designs/categories`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL}/api/public/designs/categories`, {
       next: { revalidate: 3600 },
     });
 

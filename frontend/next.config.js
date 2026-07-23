@@ -2,15 +2,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Aktifkan image optimization — WAJIB untuk LCP
+  turbopack: {
+    root: __dirname,
+  },
+
   images: {
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
-        pathname: '/your-cloud-name/**',  // Ganti dengan cloud name kamu
+        pathname: '/your-cloud-name/**',
       },
     ],
-    formats: ['image/avif', 'image/webp'],  // Otomatis convert ke WebP/AVIF
+    formats: ['image/avif', 'image/webp'],
   },
 
   async rewrites() {
@@ -37,61 +41,24 @@ const nextConfig = {
       {
         source: '/(.*)',
         headers: [
-          // Security headers
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
-      // Cache static assets agresif
       {
         source: '/(.*)\\.(jpg|jpeg|png|webp|avif|svg|ico)',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
+          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
-      // Cache Next.js static files
-      {
-        source: '/_next/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      // Jangan cache halaman HTML
       {
         source: '/((?!_next/static|_next/image|favicon.ico).*)',
         headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=60, stale-while-revalidate=300',
-          },
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=300' },
         ],
       },
     ];
