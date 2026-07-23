@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { BASE_URL } from '@/lib/constants';
 import {
   ButtonLink,
   MetricCard,
@@ -32,40 +33,23 @@ export const metadata: Metadata = {
   },
 };
 
-const categories = [
-  {
-    title: 'Elegan formal',
-    description: 'Susunan visual yang rapi untuk acara dengan karakter berwibawa dan tenang.',
-    tone: 'Paling sesuai untuk tampilan klasik',
-  },
-  {
-    title: 'Minimalis modern',
-    description: 'Komposisi bersih dengan ruang kosong yang memadai agar informasi mudah dibaca.',
-    tone: 'Tegas dan ringan',
-  },
-  {
-    title: 'Floral lembut',
-    description: 'Detail dekoratif yang memberi kesan hangat tanpa mengurangi kesederhanaan.',
-    tone: 'Romantis dan halus',
-  },
-  {
-    title: 'Tradisional modern',
-    description: 'Memadukan unsur adat dengan penyajian kontemporer yang tetap sopan.',
-    tone: 'Berakar pada tradisi',
-  },
-  {
-    title: 'Islami tenang',
-    description: 'Pilihan tata letak yang menonjolkan ketertiban dan kesahajaan.',
-    tone: 'Sederhana dan tertata',
-  },
-  {
-    title: 'Premium monokrom',
-    description: 'Kesan eksklusif dengan warna yang terkendali dan aksen emas yang terukur.',
-    tone: 'Cocok untuk identitas premium',
-  },
-];
+async function getCategories() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/public/designs/categories`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    return [];
+  }
+}
 
-export default function ReferensiDesignPage() {
+export default async function ReferensiDesignPage() {
+  const categories = await getCategories();
+
   return (
     <PageShell>
       <div style={{ ...containerStyle, padding: '32px 0 56px' }}>
@@ -97,13 +81,15 @@ export default function ReferensiDesignPage() {
             summary="Setiap kartu berikut memuat ringkasan singkat agar pengguna dapat menyaring pilihan tanpa menebak-nebak."
           />
           <div style={{ ...gridThreeStyle, marginTop: 24 }}>
-            {categories.map((item) => (
-              <article key={item.title} style={{ ...surfaceStyle, borderRadius: 26, padding: 22, background: 'rgba(255,255,255,0.76)' }}>
-                <p style={{ margin: 0, color: '#b78b2e', fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{item.tone}</p>
-                <h2 style={{ margin: '10px 0 0', fontFamily: 'var(--font-heading), serif', fontSize: '1.5rem', color: '#1f2937' }}>{item.title}</h2>
+            {categories.map((item: { name: string; slug: string; description: string }) => (
+              <article key={item.slug} style={{ ...surfaceStyle, borderRadius: 26, padding: 22 }}>
+                <h2 style={{ margin: '10px 0 0', fontFamily: 'var(--font-heading), serif', fontSize: '1.5rem', color: '#1f2937' }}>
+                  {item.name}
+                </h2>
                 <p style={{ ...bodyTextStyle, marginTop: 10 }}>{item.description}</p>
                 <div style={{ marginTop: 18 }}>
-                  <Link href={`/referensi-design/${item.title.toLowerCase().replace(/\s+/g, '-')}`} style={{ color: '#b78b2e', fontWeight: 700, textDecoration: 'none' }}>
+                  {/* Link pakai slug ASLI dari API, bukan generate dari title */}
+                  <Link href={`${BASE_URL}/referensi-design/${item.slug}`} style={{ color: '#b78b2e', fontWeight: 700, textDecoration: 'none' }}>
                     Lihat detail kategori
                   </Link>
                 </div>
@@ -131,14 +117,10 @@ export default function ReferensiDesignPage() {
           <Surface style={{ borderRadius: 32, padding: '28px clamp(24px, 4vw, 40px)' }}>
             <SectionTitle
               eyebrow="Akses cepat"
-              title="Masuk ke halaman kategori yang lebih spesifik"
-              summary="Setiap jalur berikut dibuat untuk memperjelas struktur dan menghilangkan kesan halaman kosong."
+              title="Masuk ke ruang kerja terkait"
+              summary="Gunakan navigasi berikut untuk menjelajah bagian lain platform."
             />
             <div style={{ display: 'grid', gap: 12, marginTop: 20 }}>
-              <ButtonLink href="/referensi-design/elegan-formal">Kategori elegan formal</ButtonLink>
-              <ButtonLink href="/referensi-design/minimalis-modern" variant="secondary">
-                Kategori minimalis modern
-              </ButtonLink>
               <ButtonLink href="/dashboard" variant="ghost">
                 Buka dashboard
               </ButtonLink>

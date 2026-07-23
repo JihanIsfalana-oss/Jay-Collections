@@ -11,7 +11,7 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
-        pathname: '/your-cloud-name/**',
+        pathname: '/dicgswnct/**',
       },
     ],
     formats: ['image/avif', 'image/webp'],

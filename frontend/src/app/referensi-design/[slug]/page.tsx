@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { designCategorySchema } from '@/components/seo/schema';
 import { JsonLd } from '@/components/seo/JsonLd';
+import { cache } from 'react';
+import { BASE_URL } from '@/lib/constants';
 import {
   ButtonLink,
   PageShell,
@@ -20,26 +22,22 @@ import {
 } from '../../../components/site-kit';
 
 // Helper function untuk menghindari duplikasi fetch data
-async function getCategory(slug: string) {
+const getCategory = cache(async (slug: string) => {
   try {
     const res = await fetch(
-      `${process.env.API_URL}/api/public/designs/categories`,
-      {
-        next: {
-          revalidate: 3600,
-        },
-      }
+      `${process.env.NEXT_PUBLIC_API_URL}/api/public/designs/categories`,
+      { next: { revalidate: 3600 } }
     );
 
     if (!res.ok) return null;
 
     const json = await res.json();
-    return json.data?.find((item: any) => item.slug === slug) || null;
+    return json.data?.find((item: { slug: string }) => item.slug === slug) || null;
   } catch (error) {
     console.error('Error fetching category:', error);
     return null;
   }
-}
+});
 
 export async function generateMetadata({
   params,
@@ -63,13 +61,12 @@ export async function generateMetadata({
     },
 
     alternates: {
-      canonical: `https://jaycollection.id/referensi-design/${category.slug}`,
+      canonical: `${BASE_URL}/referensi-design/${category.slug}`,
     },
-
     openGraph: {
       title: `Desain ${category.name}`,
       description: category.description,
-      url: `https://jaycollection.id/referensi-design/${category.slug}`,
+      url: `${BASE_URL}/referensi-design/${category.slug}`,
       type: 'website',
       images: category.thumbnail_url ? [category.thumbnail_url] : [],
     },

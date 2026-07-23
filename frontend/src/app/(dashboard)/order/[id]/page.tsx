@@ -25,13 +25,18 @@ export const metadata: Metadata = {
 
 const steps = ['Menunggu peninjauan', 'Pembuatan konten', 'Pemeriksaan akhir', 'Siap dipublikasikan'];
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   return (
     <PageShell>
       <div style={{ ...containerStyle, padding: '32px 0 56px' }}>
         <section style={{ ...cardStyle, borderRadius: 34, padding: '32px clamp(24px, 4vw, 44px)' }}>
           <Pill>Detail Pesanan</Pill>
-          <h1 style={{ ...titleStyle, marginTop: 18, fontSize: 'clamp(2.1rem, 4vw, 3.8rem)' }}>Pesanan #{params.id}</h1>
+          <h1 style={{ ...titleStyle, marginTop: 18, fontSize: 'clamp(2.1rem, 4vw, 3.8rem)' }}>Pesanan #{id}</h1>
           <p style={{ ...subtitleStyle, maxWidth: 820 }}>
             Halaman ini menggantikan area kosong pada rute order dengan ringkasan status yang lebih berguna bagi pengguna.
           </p>
@@ -68,7 +73,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
             />
             <div style={{ display: 'grid', gap: 12, marginTop: 20 }}>
               {[
-                ['Nomor pesanan', `#${params.id}`],
+                ['Nomor pesanan', `#${id}`],
                 ['Status saat ini', 'Dalam peninjauan'],
                 ['Catatan', 'Konten siap dilengkapi setelah revisi desain selesai'],
               ].map(([label, value]) => (
