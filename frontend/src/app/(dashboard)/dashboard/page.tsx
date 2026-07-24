@@ -87,7 +87,7 @@ export default function DashboardPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
               <Pill>Ruang Kerja</Pill>
-              <h1 style={{ ...titleStyle, marginTop: 16, fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>Dashboard pengguna Jay Collections</h1>
+              <h1 style={{ ...titleStyle, marginTop: 16, fontSize: 'clamp(2rem, 4vw, 3.5rem)' }}>Dashboard pengguna Jay Digital Invitation</h1>
               <p style={{ ...subtitleStyle, maxWidth: 760 }}>
                 Ruang kerja ini menampilkan ringkasan akun, akses cepat ke referensi desain, dan jalur navigasi yang lebih jelas.
               </p>

@@ -50,7 +50,7 @@ export default function ProfilePage() {
             />
             <div style={{ display: 'grid', gap: 12, marginTop: 20 }}>
               {[
-                ['Nama tampilan', 'Pengguna Jay Collections'],
+                ['Nama tampilan', 'Pengguna Jay Digital Invitation'],
                 ['Peran', 'Pengguna terdaftar'],
                 ['Status akun', 'Aktif'],
               ].map(([label, value]) => (
