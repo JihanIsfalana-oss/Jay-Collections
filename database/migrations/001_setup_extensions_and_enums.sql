@@ -1,8 +1,8 @@
 -- =============================================================================
 -- MIGRATION 001 — EXTENSIONS & ENUM TYPES
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
--- Created  : 2024-01-01
+-- Created  : 2026-06-01
 -- Purpose  : Initialize PostgreSQL extensions dan definisikan semua custom
 --            ENUM types sebelum tabel apapun dibuat. Harus dijalankan PERTAMA.
 -- =============================================================================

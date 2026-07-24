@@ -1,8 +1,8 @@
 -- =============================================================================
 -- MIGRATION 006 — SEED DATA
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
--- Created  : 2024-01-01
+-- Created  : 2026-06-01
 -- Depends  : 005_create_functions_triggers_views.sql
 -- Purpose  : Data awal yang WAJIB ada agar sistem bisa berjalan.
 --            Ini bukan data dummy testing — ini data konfigurasi produksi:

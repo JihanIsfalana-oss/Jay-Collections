@@ -78,7 +78,7 @@ export default function HomePage() {
       <div style={{ ...containerStyle, padding: '28px 0 56px' }}>
         <section style={{ ...cardStyle, borderRadius: 36, padding: '32px clamp(24px, 4vw, 48px)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <Pill>Jay Collections for Wedding</Pill>
+            <Pill>Jay Digital Invitation</Pill>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <ButtonLink href="/referensi-design" variant="secondary">
                 Lihat referensi
@@ -91,7 +91,7 @@ export default function HomePage() {
             <div>
               <p style={titleStyle}>Undangan digital dengan karakter klasik modern yang tertata dan berkelas.</p>
               <p style={subtitleStyle}>
-                Jay Collections merancang pengalaman undangan digital yang lebih rapi, formal, dan mudah dibagikan, dengan penekanan pada estetika abu, putih, dan emas yang konsisten.
+                Jay Digital Invitation merancang pengalaman undangan digital yang lebih rapi, formal, dan otomatisasi pembagian undangan, dengan penekanan pada estetika abu, putih, dan emas yang konsisten.
               </p>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 26 }}>
                 <ButtonLink href="/dashboard">Masuk ke dashboard</ButtonLink>

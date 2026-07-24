@@ -1,8 +1,8 @@
 -- =============================================================================
 -- MIGRATION 002 — DOMAIN 1: USER & AUTH TABLES
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
--- Created  : 2024-01-01
+-- Created  : 2026-06-01
 -- Depends  : 001_setup_extensions_and_enums.sql
 -- Purpose  : Membuat semua tabel untuk domain User dan Auth. Tabel ini adalah
 --            pondasi sistem — hampir semua tabel lain mereferensikan USERS.id.

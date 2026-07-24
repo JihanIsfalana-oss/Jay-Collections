@@ -1,8 +1,8 @@
 -- =============================================================================
 -- MIGRATION 003 — DOMAIN 2: ADMIN & OPERATIONS TABLES
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
--- Created  : 2024-01-01
+-- Created  : 2026-06-01
 -- Depends  : 001_setup_extensions_and_enums.sql
 -- Purpose  : Membuat tabel untuk panel admin yang sepenuhnya terpisah dari
 --            domain user. Admin memiliki JWT secret, session, dan audit log

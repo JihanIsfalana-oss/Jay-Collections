@@ -1,6 +1,8 @@
 -- =============================================================================
 -- MIGRATION 011 — ADMIN AUDIT DETAILS COLUMN
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
+-- Author   : Data Engineering Team
+-- Created  : 2026-07-18
 -- Purpose  : Menambahkan kolom details agar seluruh insert audit log yang
 --            sudah dipakai controller tetap kompatibel dengan schema terbaru.
 -- =============================================================================

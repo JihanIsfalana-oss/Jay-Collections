@@ -1,6 +1,6 @@
 -- =============================================================================
 -- MIGRATION 009 — CLEANUP DUPLICATE TABLES FROM MIGRATION 008
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
 -- Created  : 2026-07-12
 -- Depends  : 004_create_order_content_tables.sql

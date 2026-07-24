@@ -1,8 +1,8 @@
 -- =============================================================================
 -- MIGRATION 004 — DOMAIN 3: ORDER & CONTENT TABLES + CROSS-DOMAIN FKs
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
--- Created  : 2026-05-01
+-- Created  : 2026-06-01
 -- Depends  : 002_create_user_auth_tables.sql
 --            003_create_admin_operations_tables.sql
 -- Purpose  : Membuat tabel domain Order & Content, lalu menyelesaikan semua

@@ -1,8 +1,8 @@
 -- =============================================================================
 -- MIGRATION 005 — FUNCTIONS, TRIGGERS & VIEWS
--- Project  : Jay Collection's for Wedding
+-- Project  : Jay Digital Invitation
 -- Author   : Data Engineering Team
--- Created  : 2024-01-01
+-- Created  : 2026-06-01
 -- Depends  : 004_create_order_content_tables.sql
 -- Purpose  : Mendefinisikan:
 --            1. Functions — logic yang dijalankan di level database

@@ -3,13 +3,13 @@ import { BASE_URL } from '@/lib/constants';
 export const websiteSchema = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Jay Collections for Wedding",
+  name: "Jay Digital Invitation",
   url: BASE_URL,
-  description: "Platform undangan digital pernikahan terbaik di Indonesia.",
+  description: "Platform undangan digital pernikahan terbaik di Indonesia dengan berbagai desain unik yang bisa anda sesuaikan.",
   inLanguage: "id-ID",
   publisher: {
     "@type": "Organization",
-    name: "Jay Collections for Wedding",
+    name: "Jay Digital Invitation",
     url: BASE_URL,
   },
   potentialAction: {
@@ -22,16 +22,16 @@ export const websiteSchema = {
 export const organizationSchema = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Jay Collections for Wedding",
+  name: "Jay Digital Invitation",
   url: BASE_URL,
   logo: `${BASE_URL}/logo.png`,
-  sameAs: ["https://www.instagram.com/jaycollection"],
+  //TODO: sameAs: ["instagram.com/jaydigitalinvitation", "facebook.com/jaydigitalinvitation"],
 };
 
 export const localBusinessSchema = {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  name: "Jay Collections for Wedding",
+  name: "Jay Digital Invitation",
   image: `${BASE_URL}/logo.png`,
   telephone: "+62-821-2265-2172",
   address: {
@@ -41,7 +41,7 @@ export const localBusinessSchema = {
     addressCountry: "Indonesia",
     addressRegion: "Jawa Barat",
   },
-  openingHours: "Mo-Su 00:00-24:00",
+  openingHours: "Mo-Su 08:00-19:30",
   url: BASE_URL,
 };
 

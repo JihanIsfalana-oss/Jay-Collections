@@ -84,7 +84,7 @@ export const createTransaction = async (req, res) => {
         gross_amount: amount,
       },
       customer_details: {
-        email: req.user.email || 'customer@jaycollections.com',
+        email: req.user.email || 'customer@example.com',
         first_name: req.user.nama_lengkap || 'Customer',
       },
     };
