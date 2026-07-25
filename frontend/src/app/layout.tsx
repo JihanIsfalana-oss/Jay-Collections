@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'id_ID',
-    url: 'https://jaydigitalinvitation.example',
+    url: process.env.NEXT_PUBLIC_BASE_URL || 'https://jaydigitalinvitation.example',
     siteName: 'Jay Digital Invitation',
     title: 'Jay Digital Invitation',
     description: 'Platform undangan digital pernikahan dengan nuansa klasik modern.',

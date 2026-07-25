@@ -18,7 +18,7 @@ import rateLimit from 'express-rate-limit';
 const app = express();
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',') 
-  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5000', 'http://127.0.0.1:5000', 'http://127.0.0.1:5432'];
+  : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:5000', 'http://127.0.0.1:5000', 'http://172.25.128.1:3000'];
 
 // Rate limiting for API requests
 const limiter = rateLimit({
@@ -104,7 +104,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/', (req, res) => {
   res.json({
     status: 'success',
-    message: "Selamat Datang di Jay Collection's for Wedding Invitation Server",
+    message: "Selamat Datang di Jay Digital Invitation",
     timestamp: new Date()
   });
 });

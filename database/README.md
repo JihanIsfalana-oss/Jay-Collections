@@ -1,10 +1,12 @@
-🗄️ Jay Collection's for Wedding — Database Documentation
+🗄️ Jay Digital Invitation — Database Documentation
 
 Overview
 
-Dokumentasi ini mencakup arsitektur, skema tabel, dan petunjuk migrasi database PostgreSQL & Redis untuk platform Jay Collection's for Wedding.
+Dokumentasi ini mencakup arsitektur, skema tabel, dan petunjuk migrasi database PostgreSQL & Redis untuk platform Jay Digital Invitation.
 
 Setelah pemutakhiran Fase 6 (Enterprise Admin & Compliance Groundwork), database saat ini terdiri dari 28 tabel, 6 views, 6 trigger functions, dan 16 triggers yang terbagi dalam domain fungsional yang kokoh dan aman.
+
+**Penamaan Database:** Nama fisik database (`jay_collection`) sengaja **tidak diubah** mengikuti rebranding produk menjadi "Jay Digital Invitation". Ini adalah keputusan sadar untuk menjaga stabilitas sistem — rename database production berisiko downtime dan tidak memberi manfaat user-facing apapun karena nama database tidak pernah terlihat oleh pengguna akhir. Developer baru yang bergabung ke proyek ini **tidak perlu** "memperbaiki" inkonsistensi ini.
 
 📁 Struktur File Database
 
