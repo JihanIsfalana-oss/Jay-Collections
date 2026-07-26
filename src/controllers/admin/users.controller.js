@@ -204,16 +204,29 @@ export const getUserOrders = async (req, res) => {
   const { page = 1, limit = 20 } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
+  // Cek apakah admin ini punya izin melihat data finansial
+  const canViewRevenue = req.admin?.permissions?.can_view_revenue === true
+    || req.admin?.role_slug === 'super_admin';
+
   try {
     const countResult = await pool.query(
       'SELECT COUNT(*)::int AS total FROM orders WHERE user_id = $1',
       [id]
     );
 
+    // Query dasar tanpa kolom finansial
+    let selectColumns = 'o.*';
+    let joinClause = '';
+
+    if (canViewRevenue) {
+      selectColumns = 'o.*, p.status AS payment_status, p.payment_method, p.amount';
+      joinClause = 'LEFT JOIN payments p ON p.order_id = o.id';
+    }
+
     const ordersResult = await pool.query(
-      `SELECT o.*, p.status AS payment_status, p.payment_method, p.amount
+      `SELECT ${selectColumns}
        FROM orders o
-       LEFT JOIN payments p ON p.order_id = o.id
+       ${joinClause}
        WHERE o.user_id = $1
        ORDER BY o.created_at DESC
        LIMIT $2 OFFSET $3`,
@@ -224,6 +237,7 @@ export const getUserOrders = async (req, res) => {
       status: 'success',
       data: {
         orders: ordersResult.rows,
+        financial_data_included: canViewRevenue,
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
