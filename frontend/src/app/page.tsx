@@ -1,25 +1,8 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
-import { JsonLd } from "@/components/seo/JsonLd";
-
-import { designCategorySchema, organizationSchema, websiteSchema, localBusinessSchema } from "@/components/seo/schema";
-import {
-  ButtonLink,
-  MetricCard,
-  PageShell,
-  Pill,
-  SectionTitle,
-  Surface,
-  bodyTextStyle,
-  cardStyle,
-  containerStyle,
-  gridThreeStyle,
-  gridTwoStyle,
-  helpTextStyle,
-  sectionSpacingStyle,
-  subtitleStyle,
-  titleStyle,
-  surfaceStyle,
-} from '../components/site-kit';
+import { JsonLd } from '@/components/seo/JsonLd';
+import { localBusinessSchema, organizationSchema, websiteSchema } from '@/components/seo/schema';
+import styles from './page.module.css';
 
 const features = [
   {
@@ -69,142 +52,175 @@ const showcase = [
   },
 ];
 
+export const metadata: Metadata = {
+  title: 'Undangan Digital Pernikahan Elegan',
+  description:
+    'Buat undangan digital pernikahan klasik modern yang elegan, mudah dipersonalisasi, dan siap dibagikan kepada tamu.',
+  robots: {
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: '/',
+  },
+};
+
 export default function HomePage() {
   return (
-    <PageShell>
+    <main className={styles.page}>
       <JsonLd data={websiteSchema} />
       <JsonLd data={organizationSchema} />
       <JsonLd data={localBusinessSchema} />
-      <div style={{ ...containerStyle, padding: '28px 0 56px' }}>
-        <section style={{ ...cardStyle, borderRadius: 36, padding: '32px clamp(24px, 4vw, 48px)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <Pill>Jay Digital Invitation</Pill>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <ButtonLink href="/referensi-design" variant="secondary">
+
+      <div className={styles.container}>
+        <section className={`${styles.surface} ${styles.hero}`}>
+          <div className={styles.heroBar}>
+            <span className={styles.pill}>Jay Digital Invitation</span>
+            <div className={styles.inlineActions}>
+              <Link className={`${styles.action} ${styles.actionSecondary}`} href="/referensi-design">
                 Lihat referensi
-              </ButtonLink>
-              <ButtonLink href="/register">Buat akun</ButtonLink>
+              </Link>
+              <Link className={`${styles.action} ${styles.actionPrimary}`} href="/register">
+                Buat akun
+              </Link>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gap: 28, gridTemplateColumns: 'minmax(0, 1.25fr) minmax(280px, 0.75fr)', alignItems: 'center', marginTop: 30 }}>
+          <div className={styles.heroContent}>
             <div>
-              <p style={titleStyle}>Undangan digital dengan karakter klasik modern yang tertata dan berkelas.</p>
-              <p style={subtitleStyle}>
+              <h1 className={styles.heroTitle}>Undangan digital dengan karakter klasik modern yang tertata dan berkelas.</h1>
+              <p className={styles.subtitle}>
                 Jay Digital Invitation merancang pengalaman undangan digital yang lebih rapi, formal, dan otomatisasi pembagian undangan, dengan penekanan pada estetika abu, putih, dan emas yang konsisten.
               </p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 26 }}>
-                <ButtonLink href="/dashboard">Masuk ke dashboard</ButtonLink>
-                <ButtonLink href="/login" variant="secondary">
+              <div className={styles.inlineActions}>
+                <Link className={`${styles.action} ${styles.actionPrimary}`} href="/dashboard">
+                  Masuk ke dashboard
+                </Link>
+                <Link className={`${styles.action} ${styles.actionSecondary}`} href="/login">
                   Masuk ke akun
-                </ButtonLink>
+                </Link>
               </div>
-              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', marginTop: 28 }}>
-                <MetricCard value="18+" label="Kategori" note="Referensi desain yang terkurasi." />
-                <MetricCard value="24 jam" label="Layanan" note="Akses dan pemantauan sepanjang waktu." />
-                <MetricCard value="100%" label="Bahasa baku" note="Seluruh antarmuka ditulis formal." />
+              <div className={styles.metrics}>
+                <article className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Kategori</p>
+                  <p className={styles.metricValue}>18+</p>
+                  <p className={styles.helpText}>Referensi desain yang terkurasi.</p>
+                </article>
+                <article className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Layanan</p>
+                  <p className={styles.metricValue}>24 jam</p>
+                  <p className={styles.helpText}>Akses dan pemantauan sepanjang waktu.</p>
+                </article>
+                <article className={styles.metricCard}>
+                  <p className={styles.metricLabel}>Bahasa baku</p>
+                  <p className={styles.metricValue}>100%</p>
+                  <p className={styles.helpText}>Seluruh antarmuka ditulis formal.</p>
+                </article>
               </div>
             </div>
 
-            <Surface style={{ borderRadius: 30, padding: 24 }}>
-              <p style={{ ...helpTextStyle, textTransform: 'uppercase', letterSpacing: '0.18em', fontWeight: 800, color: '#7a5a18' }}>Sorotan singkat</p>
-              <div style={{ display: 'grid', gap: 14, marginTop: 16 }}>
+            <section className={`${styles.surface} ${styles.showcasePanel}`} aria-labelledby="showcase-title">
+              <h2 id="showcase-title" className={styles.eyebrow}>Sorotan singkat</h2>
+              <div className={styles.showcaseList}>
                 {showcase.map((item) => (
-                  <article key={item.title} style={{ background: 'rgba(255,255,255,0.78)', borderRadius: 20, padding: 18, border: '1px solid #d6d3cc' }}>
-                    <h2 style={{ margin: 0, fontSize: '1.05rem', color: '#1f2937' }}>{item.title}</h2>
-                    <p style={{ ...bodyTextStyle, marginTop: 8 }}>{item.description}</p>
+                  <article key={item.title} className={styles.showcaseItem}>
+                    <h3 className={styles.itemTitle}>{item.title}</h3>
+                    <p className={styles.bodyText}>{item.description}</p>
                   </article>
                 ))}
               </div>
-            </Surface>
+            </section>
           </div>
         </section>
 
-        <section style={{ ...sectionSpacingStyle, display: 'grid', gap: 20, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}>
+        <section className={`${styles.section} ${styles.threeColumnGrid}`} aria-labelledby="features-title">
+          <h2 id="features-title" className={styles.visuallyHidden}>Keunggulan Jay Digital Invitation</h2>
           {features.map((item) => (
-            <article key={item.title} style={cardStyle}>
-              <p style={{ ...helpTextStyle, color: '#b78b2e', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Keunggulan</p>
-              <h2 style={{ margin: '10px 0 0', fontFamily: 'var(--font-heading), serif', fontSize: '1.5rem', color: '#1f2937' }}>{item.title}</h2>
-              <p style={{ ...bodyTextStyle, marginTop: 12 }}>{item.description}</p>
+            <article key={item.title} className={styles.card}>
+              <p className={styles.eyebrow}>Keunggulan</p>
+              <h3 className={styles.cardTitle}>{item.title}</h3>
+              <p className={styles.bodyText}>{item.description}</p>
             </article>
           ))}
         </section>
 
-        <section style={{ ...sectionSpacingStyle, ...cardStyle, borderRadius: 32, padding: '28px clamp(24px, 4vw, 40px)' }}>
-          <SectionTitle
-            eyebrow="Alur kerja"
-            title="Rangkaian pengalaman yang utuh dari pemilihan hingga publikasi"
-            summary="Seluruh halaman disusun agar pengunjung memahami perjalanan layanan tanpa harus menebak-nebak fungsi setiap bagian."
-          />
-          <div style={{ ...gridThreeStyle, marginTop: 24 }}>
+        <section className={`${styles.section} ${styles.card}`} aria-labelledby="workflow-title">
+          <header>
+            <p className={styles.eyebrow}>Alur kerja</p>
+            <h2 id="workflow-title" className={styles.sectionTitle}>Rangkaian pengalaman yang utuh dari pemilihan hingga publikasi</h2>
+            <p className={styles.sectionSummary}>Seluruh halaman disusun agar pengunjung memahami perjalanan layanan tanpa harus menebak-nebak fungsi setiap bagian.</p>
+          </header>
+          <div className={`${styles.threeColumnGrid} ${styles.topGap}`}>
             {processSteps.map((item) => (
-              <article key={item.step} style={{ ...surfaceStyle, borderRadius: 24, padding: 22, background: 'rgba(255,255,255,0.75)' }}>
-                <p style={{ margin: 0, color: '#b78b2e', fontWeight: 800, letterSpacing: '0.12em' }}>{item.step}</p>
-                <h3 style={{ margin: '12px 0 0', fontFamily: 'var(--font-heading), serif', fontSize: '1.4rem', color: '#1f2937' }}>{item.title}</h3>
-                <p style={{ ...bodyTextStyle, marginTop: 10 }}>{item.description}</p>
+              <article key={item.step} className={styles.stepCard}>
+                <p className={styles.stepNumber}>{item.step}</p>
+                <h3 className={styles.stepTitle}>{item.title}</h3>
+                <p className={styles.bodyText}>{item.description}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section style={{ ...sectionSpacingStyle, display: 'grid', gap: 20, gridTemplateColumns: 'minmax(0, 0.95fr) minmax(0, 1.05fr)' }}>
-          <Surface style={{ borderRadius: 32, padding: '28px clamp(24px, 4vw, 40px)' }}>
-            <SectionTitle
-              eyebrow="Sorotan desain"
-              title="Palet warna tenang untuk menegaskan kesan premium"
-              summary="Perpaduan gray, putih, dan gold menjaga tampilan tetap formal, bersih, serta mudah dipindai pada layar kecil maupun besar."
-            />
-            <div style={{ display: 'grid', gap: 12, marginTop: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 18, background: '#f8f7f3', border: '1px solid #d6d3cc' }}>
-                <span style={{ fontWeight: 700 }}>Warna dominan</span>
-                <span style={{ color: '#4b5563' }}>Gray, putih, emas</span>
+        <section className={`${styles.section} ${styles.twoColumnGrid}`}>
+          <section className={`${styles.surface} ${styles.card}`} aria-labelledby="palette-title">
+            <header>
+              <p className={styles.eyebrow}>Sorotan desain</p>
+              <h2 id="palette-title" className={styles.sectionTitle}>Palet warna tenang untuk menegaskan kesan premium</h2>
+              <p className={styles.sectionSummary}>Perpaduan gray, putih, dan gold menjaga tampilan tetap formal, bersih, serta mudah dipindai pada layar kecil maupun besar.</p>
+            </header>
+            <dl className={styles.detailList}>
+              <div className={styles.detailRow}>
+                <dt>Warna dominan</dt>
+                <dd>Gray, putih, emas</dd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 18, background: '#f8f7f3', border: '1px solid #d6d3cc' }}>
-                <span style={{ fontWeight: 700 }}>Nada bahasa</span>
-                <span style={{ color: '#4b5563' }}>Baku, formal, profesional</span>
+              <div className={styles.detailRow}>
+                <dt>Nada bahasa</dt>
+                <dd>Baku, formal, profesional</dd>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: 18, background: '#f8f7f3', border: '1px solid #d6d3cc' }}>
-                <span style={{ fontWeight: 700 }}>Arah pengalaman</span>
-                <span style={{ color: '#4b5563' }}>Lengkap dan konsisten</span>
+              <div className={styles.detailRow}>
+                <dt>Arah pengalaman</dt>
+                <dd>Lengkap dan konsisten</dd>
               </div>
-            </div>
-          </Surface>
+            </dl>
+          </section>
 
-          <Surface style={{ borderRadius: 32, padding: '28px clamp(24px, 4vw, 40px)' }}>
-            <SectionTitle
-              eyebrow="Akses cepat"
-              title="Masuk ke area kerja dan katalog referensi"
-              summary="Halaman publik dan halaman internal dipisahkan dengan jelas agar navigasi tetap efisien."
-            />
-            <div style={{ display: 'grid', gap: 12, marginTop: 24 }}>
-              <ButtonLink href="/referensi-design">Buka katalog desain</ButtonLink>
-              <ButtonLink href="/statistik" variant="secondary">
+          <section className={`${styles.surface} ${styles.card}`} aria-labelledby="quick-access-title">
+            <header>
+              <p className={styles.eyebrow}>Akses cepat</p>
+              <h2 id="quick-access-title" className={styles.sectionTitle}>Masuk ke area kerja dan katalog referensi</h2>
+              <p className={styles.sectionSummary}>Halaman publik dan halaman internal dipisahkan dengan jelas agar navigasi tetap efisien.</p>
+            </header>
+            <nav className={styles.stackedActions} aria-label="Akses cepat">
+              <Link className={`${styles.action} ${styles.actionPrimary}`} href="/referensi-design">
+                Buka katalog desain
+              </Link>
+              <Link className={`${styles.action} ${styles.actionSecondary}`} href="/statistik">
                 Lihat statistik layanan
-              </ButtonLink>
-              <ButtonLink href="/dashboard" variant="ghost">
+              </Link>
+              <Link className={`${styles.action} ${styles.actionGhost}`} href="/dashboard">
                 Buka dashboard pengguna
-              </ButtonLink>
-            </div>
-          </Surface>
+              </Link>
+            </nav>
+          </section>
         </section>
 
-        <section style={{ ...sectionSpacingStyle, ...cardStyle, borderRadius: 32, padding: '28px clamp(24px, 4vw, 40px)' }}>
-          <SectionTitle
-            eyebrow="Katalog singkat"
-            title="Kategori referensi yang menampilkan pilihan paling relevan"
-            summary="Tampilan ini menggantikan halaman kosong dengan konteks yang benar-benar berguna bagi pengunjung pertama kali."
-          />
-          <div style={{ ...gridThreeStyle, marginTop: 24 }}>
+        <section className={`${styles.section} ${styles.card}`} aria-labelledby="catalog-title">
+          <header>
+            <p className={styles.eyebrow}>Katalog singkat</p>
+            <h2 id="catalog-title" className={styles.sectionTitle}>Kategori referensi yang menampilkan pilihan paling relevan</h2>
+            <p className={styles.sectionSummary}>Tampilan ini menggantikan halaman kosong dengan konteks yang benar-benar berguna bagi pengunjung pertama kali.</p>
+          </header>
+          <div className={`${styles.threeColumnGrid} ${styles.topGap}`}>
             {['Elegan formal', 'Floral lembut', 'Tradisional modern'].map((item) => (
-              <article key={item} style={{ ...surfaceStyle, borderRadius: 24, padding: 20, background: 'rgba(255,255,255,0.76)' }}>
-                <p style={{ ...helpTextStyle, color: '#b78b2e', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Kategori</p>
-                <h3 style={{ margin: '8px 0 0', fontFamily: 'var(--font-heading), serif', fontSize: '1.35rem', color: '#1f2937' }}>{item}</h3>
-                <p style={{ ...bodyTextStyle, marginTop: 10 }}>Disusun untuk memberikan arah visual yang jelas pada calon pengguna.</p>
+              <article key={item} className={styles.stepCard}>
+                <p className={styles.eyebrow}>Kategori</p>
+                <h3 className={styles.stepTitle}>{item}</h3>
+                <p className={styles.bodyText}>Disusun untuk memberikan arah visual yang jelas pada calon pengguna.</p>
               </article>
             ))}
           </div>
         </section>
       </div>
-    </PageShell>
+    </main>
   );
 }

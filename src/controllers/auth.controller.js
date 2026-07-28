@@ -6,7 +6,11 @@ import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { buildUserTokenPayload } from '../utils/authToken.js';
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
 
 const getJwtSecret = () => {
   const secret = process.env.JWT_SECRET_USER;
@@ -171,11 +175,20 @@ export const googleLogin = async (req, res) => {
       payload = { sub: 'mock_google_id_' + Date.now(), email, name, picture: picture || '' };
     } else {
       // Skenario 2: Token Verifikator Asli Google SDK
-      if (!googleToken) {
-        return res.status(400).json({ status: 'error', message: '[ERROR] googleToken diperlukan!' });
+      let idToken = googleToken;
+
+      // Jika menggunakan Authorization Code Flow, tukarkan code menjadi tokens
+      if (code) {
+        const { tokens } = await client.getToken(code);
+        idToken = tokens.id_token;
       }
+
+      if (!idToken) {
+        return res.status(400).json({ status: 'error', message: '[ERROR] googleToken atau code diperlukan!' });
+      }
+
       const ticket = await client.verifyIdToken({
-        idToken: googleToken,
+        idToken: idToken,
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       payload = ticket.getPayload();
@@ -200,10 +213,11 @@ export const googleLogin = async (req, res) => {
       );
       user = insertUser.rows[0];
     } else if (!user.google_id) {
-      await pool.query(
-        'UPDATE users SET google_id = $1, avatar_url = $2, updated_at = NOW() WHERE id = $3', 
+      const updateUser = await pool.query(
+        'UPDATE users SET google_id = $1, avatar_url = $2, updated_at = NOW() WHERE id = $3 RETURNING *', 
         [google_id, userPicture, user.id]
       );
+      user = updateUser.rows[0];
     }
 
     const token = jwt.sign(
@@ -220,7 +234,7 @@ export const googleLogin = async (req, res) => {
 
   } catch (error) {
     console.error('[ERROR] Google Login Error:', error);
-    return res.status(401).json({ status: 'error', message: '[ERROR] Token Google tidak valid.' });
+    return res.status(401).json({ status: 'error', message: '[ERROR] Autentikasi Google gagal.' });
   }
 };
 

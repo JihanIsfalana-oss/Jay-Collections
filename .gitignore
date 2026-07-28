@@ -89,10 +89,14 @@ Desktop.ini
 # Mengabaikan temporary files dari Ngrok, Postman dumps, dll
 .ngrok/
 ngrok.exe
-testing postman.txt
 postman_collection.json
 tmp-check-auth.mjs
 tmp-login-debug.mjs
 screenshots/
 snapshots/
 debug.log
+*.txt
+vibes/
+.sixth/
+.sixthrules/
+.continue/

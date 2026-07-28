@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Manrope } from 'next/font/google';
+import { BASE_URL } from '@/lib/constants';
 
 const bodyFont = Manrope({
   subsets: ['latin'],
@@ -17,7 +18,7 @@ const headingFont = Cormorant_Garamond({
 
 // Default metadata — di-override per halaman
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://jaydigitalinvitation.example'),
+  metadataBase: new URL(BASE_URL),
   
   title: {
     default: 'Jay Digital Invitation',
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'id_ID',
-    url: process.env.NEXT_PUBLIC_BASE_URL || 'https://jaydigitalinvitation.example',
+    url: BASE_URL,
     siteName: 'Jay Digital Invitation',
     title: 'Jay Digital Invitation',
     description: 'Platform undangan digital pernikahan dengan nuansa klasik modern.',
@@ -75,11 +76,6 @@ export const metadata: Metadata = {
   
   // Halaman authenticated — default noindex
   // Di-override ke index: true hanya untuk halaman publik
-  robots: {
-    index: false,
-    follow: false,
-  },
-  
   // Canonical default
   alternates: {
     canonical: '/',

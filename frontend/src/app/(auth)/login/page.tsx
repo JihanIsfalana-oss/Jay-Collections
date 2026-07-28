@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
+import GoogleLoginButton from '@/components/GoogleLoginButton';
 import {
   ButtonLink,
   PageShell,
@@ -141,6 +142,7 @@ export default function LoginPage() {
               <ButtonLink href="/">Kembali ke beranda</ButtonLink>
             </div>
           </Surface>
+          <GoogleLoginButton />
         </div>
       </div>
     </PageShell>
