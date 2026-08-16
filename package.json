@@ -28,7 +28,7 @@
     "morgan": "^1.11.0",
     "pg": "^8.22.0",
     "qrcode": "^1.5.4",
-    "redis": "^6.1.0",
+    "redis": "^6.2.1",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {
